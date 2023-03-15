@@ -1,27 +1,26 @@
----
 apiVersion: eksctl.io/v1alpha5
 kind: ClusterConfig
 
 metadata:
-  name: ShivaniCapstone # name of cluster
+  name: my-eks-201 # name of cluster
   region: us-east-1
-  version: "1.23" # kubernetes version
+  version: "1.20" # kubernetes version
 vpc: # Refer: https://github.com/weaveworks/eksctl/blob/main/examples/04-existing-vpc.yaml
-  id: "vpc-0ea81f3a1d1704ba6"
+  id: "vpc-063ac28366bf06514"
   subnets:
     public:
-      upgrad-public-1:
-        id: "subnet-003f96ce7ce2e288e"
+      my-public-201-a:
+        id: "subnet-061b0bd3059aaf8d9"
         az: "us-east-1a"
-      upgrad-public-2:
-        id: "subnet-079c7bda93531215b"
+      my-public-201-b:
+        id: "subnet-0cbc9b1d2a89c8bf3"
         az: "us-east-1b"
     private:
-      upgrad-private-1:
-        id: "subnet-0a6e886b225454858 " 
+      my-private-201-a:
+        id: "subnet-02f337862f9ff2dc5"
         az: "us-east-1a"
-      upgrad-private-2:
-        id: "subnet-0d300d4183d8998b7"
+      my-private-201-b:
+        id: "subnet-00ba81df5d3beb60f"
         az: "us-east-1b"
   clusterEndpoints:
     publicAccess:  true
@@ -65,7 +64,7 @@ iam: # Refer: https://eksctl.io/usage/iamserviceaccounts/
       autoScaler: true
 
 nodeGroups: # Refer: https://github.com/weaveworks/eksctl/blob/main/examples/05-advanced-nodegroups.yaml
-  - name: Node-G1
+  - name: pvt-201-a-1
     labels: { role: workers }
     tags:
       k8s.io/cluster-autoscaler/enabled: "true" # tag is needed for cluster autoscaler. Refer: https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/aws/README.md#auto-discovery-setup
@@ -74,12 +73,12 @@ nodeGroups: # Refer: https://github.com/weaveworks/eksctl/blob/main/examples/05-
       instanceTypes:
         - t2.medium
     desiredCapacity: 1
-    minSize: 0
+    minSize: 2
     maxSize: 3
     privateNetworking: true # include only in private subnet
     subnets:
-      - upgrad-private-1 # 1 AZ is enough for testing
-  - name: Node-G2
+      - my-private-201-a # 1 AZ is enough for testing
+  - name: pub-201-a-1
     labels: { role: workers }
     tags:
       k8s.io/cluster-autoscaler/enabled: "true"
@@ -91,23 +90,21 @@ nodeGroups: # Refer: https://github.com/weaveworks/eksctl/blob/main/examples/05-
     minSize: 2
     maxSize: 2
     subnets:
-      - upgrad-public-1
-
-  - name: Node-G3
+      - my-public-201-a
+  - name: pub-201-a-2
     labels: { role: workers }
     tags:
-      k8s.io/cluster-autoscaler/enabled: "true" # tag is needed for cluster autoscaler. Refer: https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/aws/README.md#auto-discovery-setup
-      k8s.io/cluster-autoscaler/my-eks-201: "shared" # cluster name tag is optional in latest versions of EKS
+      k8s.io/cluster-autoscaler/enabled: "true"
+      k8s.io/cluster-autoscaler/my-eks-201: "shared"
     instancesDistribution:
       instanceTypes:
         - t2.medium
-    desiredCapacity: 1
-    minSize: 0
-    maxSize: 5
     taints:
-      - key: special
-        value: "true"
-        effect: Equal
-    privateNetworking: true # include only in private subnet
+      - key: dedicated
+        value: "stateless"
+        effect: NoSchedule 
+    desiredCapacity: 2
+    minSize: 2
+    maxSize: 2
     subnets:
-      - upgrad-private-1 # 1 AZ is enough for testing
+      - my-public-201-a
